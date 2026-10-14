@@ -1,0 +1,53 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      # README「快速开始」第 2 步：由 stub 生成开源版入口脚本。
+      # auth.js / oauth-bootstrap.js 已被 .gitignore 排除、也不允许提交，
+      # 因此只在构建阶段生成，随产物发布，不进仓库。
+      - name: Generate public entry scripts
+        run: |
+          cp -f auth.stub.js auth.js
+          cp -f oauth-bootstrap.stub.js oauth-bootstrap.js
+          ls -l auth.js oauth-bootstrap.js
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v6
+        with:
+          enablement: true
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v5
+        with:
+          path: .
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v5
