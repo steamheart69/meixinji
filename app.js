@@ -34246,8 +34246,15 @@ async function verifyStExportUnlockBuffer(buffer) {
 
 let charStUnlockPendingFile = null;
 
+/**
+ * 开源版本地解锁开关。
+ * 未启用云账号登录时无法完成「ST 验证卡」往返校验，置为 true 则 ST 卡导入直接可用。
+ * 已获作者许可；改回 false 即恢复原厂行为。
+ */
+const ST_TAVERN_IMPORT_LOCAL_UNLOCK = true;
+
 function readStTavernImportUnlocked() {
-  if (!isCloudAuthEnabled()) return false;
+  if (!isCloudAuthEnabled()) return ST_TAVERN_IMPORT_LOCAL_UNLOCK;
   try {
     const D = window.XXJ_DB;
     if (!D?.getKv || !D.K) return false;
@@ -34262,7 +34269,7 @@ function readStTavernImportUnlocked() {
 function syncCharStTavernImportLockUi() {
   const b1 = document.getElementById("char-tavern-import-btn");
   const b2 = document.getElementById("char-roster-tavern-import");
-  if (!isCloudAuthEnabled()) {
+  if (!isCloudAuthEnabled() && !ST_TAVERN_IMPORT_LOCAL_UNLOCK) {
     b1?.setAttribute("hidden", "");
     b2?.setAttribute("hidden", "");
     return;
@@ -68500,7 +68507,7 @@ document.getElementById("chat-detail-call-illust-clear-all")?.addEventListener("
 });
 
 function openCharTavernImportPicker() {
-  if (!isCloudAuthEnabled()) {
+  if (!isCloudAuthEnabled() && !ST_TAVERN_IMPORT_LOCAL_UNLOCK) {
     showToast("账号登录相关功能仅正式版可用");
     return;
   }
